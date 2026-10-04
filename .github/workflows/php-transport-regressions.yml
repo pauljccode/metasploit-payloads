@@ -1,0 +1,44 @@
+name: PHP transport regressions
+on:
+  push:
+    branches: [ci/php-transport-corrections]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  transport:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-2022]
+        php: ['5.3', '7.4', '8.3']
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: candidate
+      - uses: actions/checkout@v4
+        with:
+          repository: rapid7/metasploit-payloads
+          ref: 0aa09117dcee240eb92b3d559a01593dccd44c14
+          path: baseline
+      - uses: ruby/setup-ruby@eaecf785f6a34567a6d97f686bbb7bccc1ac1e5c
+        with:
+          ruby-version: '3.4'
+      - uses: shivammathur/setup-php@c541c155eee45413f5b09a52248675b1a2575231
+        if: runner.os == 'Windows'
+        with:
+          php-version: ${{ matrix.php }}
+          tools: none
+          extensions: sockets
+      - uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f
+        if: runner.os != 'Windows'
+        with:
+          php-version: ${{ matrix.php }}
+          tools: none
+          extensions: sockets
+      - name: Confirm baseline failures
+        run: ruby candidate/.github/ci/check-php-transport.rb baseline/php/meterpreter/meterpreter.php baseline
+      - name: Check corrected transport
+        run: ruby candidate/.github/ci/check-php-transport.rb candidate/php/meterpreter/meterpreter.php candidate
