@@ -3,8 +3,9 @@ require 'open3'
 require 'socket'
 require 'timeout'
 
-source, revision = ARGV
-abort 'Usage: ruby check-php-transport.rb SOURCE baseline|candidate' unless source && %w[baseline candidate].include?(revision)
+source, revision, group = ARGV
+group ||= 'all'
+abort 'Usage: ruby check-php-transport.rb SOURCE baseline|candidate [all|tcp|udp]' unless source && %w[baseline candidate].include?(revision) && %w[all tcp udp].include?(group)
 fixture = File.join(__dir__, 'php-transport-fixture.php')
 frame = ->(body) { ("\x00" * 24) + [body.bytesize + 8].pack('N') + ("\x00" * 4) + body }
 first = frame.call('01234567' * 8)
@@ -26,6 +27,7 @@ cases = {
   'udp' => [[], ["first\x00\xff".b, "second\x00\x80".b], nil]
 }
 known_failures = %w[header-gap body-gap second-header-gap second-body-gap invalid-length udp]
+cases.select! { |name, _| (name == 'udp') == (group == 'udp') } unless group == 'all'
 
 cases.each do |name, (chunks, expected_packets, expected_result)|
   server = TCPServer.new('127.0.0.1', 0)

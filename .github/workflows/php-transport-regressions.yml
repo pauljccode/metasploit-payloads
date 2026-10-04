@@ -23,6 +23,14 @@ jobs:
           repository: rapid7/metasploit-payloads
           ref: 0aa09117dcee240eb92b3d559a01593dccd44c14
           path: baseline
+      - uses: actions/checkout@v4
+        with:
+          ref: 2addfcce8cfe4abf79b7098711e518fad0f42fe0
+          path: tcp-candidate
+      - uses: actions/checkout@v4
+        with:
+          ref: 2c5e2503a742a07f671eaae358468cf43ae69fa7
+          path: udp-candidate
       - uses: ruby/setup-ruby@eaecf785f6a34567a6d97f686bbb7bccc1ac1e5c
         with:
           ruby-version: '3.4'
@@ -42,3 +50,7 @@ jobs:
         run: ruby candidate/.github/ci/check-php-transport.rb baseline/php/meterpreter/meterpreter.php baseline
       - name: Check corrected transport
         run: ruby candidate/.github/ci/check-php-transport.rb candidate/php/meterpreter/meterpreter.php candidate
+      - name: Check TCP correction independently
+        run: ruby candidate/.github/ci/check-php-transport.rb tcp-candidate/php/meterpreter/meterpreter.php candidate tcp
+      - name: Check UDP correction independently
+        run: ruby candidate/.github/ci/check-php-transport.rb udp-candidate/php/meterpreter/meterpreter.php candidate udp
