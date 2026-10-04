@@ -1,0 +1,52 @@
+name: UDP port reuse reproduction
+
+on:
+  push:
+    branches: [ci/udp-send-reproduction]
+
+permissions:
+  contents: read
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: rapid7/metasploit-framework
+          ref: 5e598d5233bebecef2a44904a286769d83d31d12
+          path: framework
+      - uses: actions/checkout@v4
+        with:
+          repository: pauljccode/metasploit-payloads
+          ref: 2c5e2503a742a07f671eaae358468cf43ae69fa7
+          fetch-depth: 2
+          path: candidate
+      - name: Install native dependencies
+        run: sudo apt-get install -y --no-install-recommends libpcap-dev graphviz
+      - uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f
+        with:
+          php-version: '7.4'
+          tools: none
+      - name: Complete Git maintenance before Bundler
+        run: git config --global maintenance.autoDetach false
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.4'
+          bundler-cache: true
+          working-directory: framework
+          cache-version: udp-port-reuse-1
+        env:
+          BUNDLE_WITHOUT: coverage development
+      - name: Reproduce stale datagram delivery
+        run: python3 .github/ci/check-udp-port-reuse.py framework candidate baseline evidence/baseline
+      - name: Verify corrected receive flags
+        run: python3 .github/ci/check-udp-port-reuse.py framework candidate candidate evidence/candidate
+      - name: Preserve source, byte and peer evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: udp-port-reuse-evidence
+          path: evidence
