@@ -69,7 +69,7 @@ try:
         ret = received == data''')
     module.write_text(text)
     (out / 'test-instrumentation.diff').write_bytes(subprocess.check_output(['git', '-C', str(framework), 'diff', '--', str(module)]))
-    args = ['ruby', '-Ilib', '-Ispec', '-S', 'rspec', 'spec/acceptance/meterpreter_spec.rb',
+    args = ['bundle', 'exec', 'ruby', '-Ilib', '-Ispec', '-S', 'rspec', 'spec/acceptance/meterpreter_spec.rb',
             '--require', 'acceptance_spec_helper.rb', '--tag', 'acceptance',
             '--example', 'php/meterpreter_reverse_tcp" payload and passes the "post/test/socket_channels',
             '--format', 'documentation', '--format', 'AllureRspec::RSpecFormatter',
