@@ -11,6 +11,8 @@ jobs:
   reproduce:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    env:
+      BUNDLE_WITHOUT: coverage development
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
@@ -38,8 +40,6 @@ jobs:
           bundler-cache: true
           working-directory: framework
           cache-version: udp-port-reuse-1
-        env:
-          BUNDLE_WITHOUT: coverage development
       - name: Reproduce stale datagram delivery
         run: python3 .github/ci/check-udp-port-reuse.py framework candidate baseline evidence/baseline
       - name: Verify corrected receive flags

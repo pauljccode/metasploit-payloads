@@ -86,6 +86,9 @@ try:
                 os.killpg(process.pid, signal.SIGKILL)
                 process.wait()
             raise
+    if not (out / 'rspec.json').is_file():
+        tail = '\n'.join((out / 'acceptance.log').read_text(errors='replace').splitlines()[-40:])
+        raise RuntimeError(f'RSpec produced no results (exit {code}):\n{tail}')
     shutil.copytree(framework / 'tmp/allure-raw-data', out / 'allure')
     result = json.loads((out / 'rspec.json').read_text())
     log = (out / 'acceptance.log').read_text(errors='replace')
